@@ -4,4 +4,3 @@ An implementation of Jarek Duda's [Asymmetric Numeral Systems](https://arxiv.org
 
 ## notes (for my understanding)
 
-
