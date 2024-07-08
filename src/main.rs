@@ -11,13 +11,11 @@ struct Args {
     filepath: PathBuf,
 }
 
-fn main() -> io::Result<()> {
-    let args = Args::parse();
-
-    let f = File::open(&args.filepath)?;
+fn entropy_of_file(f: PathBuf) -> io::Result<f64> {
+    let f = File::open(f)?;
     let mut reader = BufReader::new(f);
 
-    let mut buf = [0u8; 4 * 1024]; // 4 kb buffer, probably too small
+    let mut buf = [0u8; 1024 * 1024]; // 4 kb buffer, probably too small
     let mut byte_freq = [0u64; 256];
     let mut tot_count = 0u64;
 
@@ -42,7 +40,13 @@ fn main() -> io::Result<()> {
         })
         .sum::<f64>();
 
-    println!("H = {entropy}");
+    Ok(entropy)
+}
+
+fn main() -> io::Result<()> {
+    let args = Args::parse();
+
+    println!("H = {}", entropy_of_file(args.filepath)?);
 
     Ok(())
 }
