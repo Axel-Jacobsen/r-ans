@@ -4,30 +4,8 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-// TODO I don't like the ergonomics of this CLI
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// What to do
-    #[command(subcommand)]
-    command: Commands,
-
-    /// Path to input file
-    filepath: PathBuf,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    /// Calculate entropy of the input file
-    Entropy,
-
-    /// Compress the input file
-    Compress,
-}
-
 struct SymbolProbabilities {
-    tot_count: u64,
-    symbol_counts: [f64; 256],
+    symbol_probabilities: [f64; 256],
 }
 
 struct SymbolStatistics {
@@ -72,32 +50,62 @@ impl SymbolStatistics {
             .unwrap();
 
         SymbolProbabilities {
-            tot_count: self.tot_count,
-            symbol_counts: normalized_frequencies,
+            symbol_probabilities: normalized_frequencies,
         }
     }
 }
 
 fn entropy_of_file(f: PathBuf) -> io::Result<f64> {
-    let SymbolProbabilities {
-        tot_count,
-        symbol_counts,
-    } = SymbolStatistics::new(f)?.normalize();
+    let ps = SymbolStatistics::new(f)?.normalize().symbol_probabilities;
 
-    let entropy = -symbol_counts
+    let entropy = -ps
         .iter()
-        .filter(|&&x| x != 0.)
-        .map(|&x| {
-            let p = x as f64 / tot_count as f64;
-            p * f64::log(p, 2.0)
-        })
+        .filter(|&&p| p != 0.)
+        .map(|&p| p * f64::log(p, 2.0))
         .sum::<f64>();
 
     Ok(entropy)
 }
 
 fn compress(f: PathBuf) -> io::Result<f64> {
+    let statistics = SymbolStatistics::new(f)?;
+
+    // construct the cdf array
+    let mut cdf_arr = [0u64; 256];
+    for (i, count) in statistics.symbol_counts.iter().enumerate() {
+        cdf_arr[i] = count + if i == 0 { 0 } else { cdf_arr[i - 1] };
+    }
+
+    let _cdf = |s: u8| -> u64 {
+        if s == 0 {
+            0
+        } else {
+            cdf_arr[s as usize]
+        }
+    };
+
     Ok(0f64)
+}
+
+// TODO I don't like the ergonomics of this CLI
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// What to do
+    #[command(subcommand)]
+    command: Commands,
+
+    /// Path to input file
+    filepath: PathBuf,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Calculate entropy of the input file
+    Entropy,
+
+    /// Compress the input file
+    Compress,
 }
 
 fn main() -> io::Result<()> {
