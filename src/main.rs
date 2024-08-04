@@ -8,17 +8,13 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 fn entropy_of_file(f: PathBuf) -> io::Result<f64> {
-    let ps = file_statistics::SymbolStatistics::new(f)?
+    Ok(-file_statistics::SymbolStatistics::new(f)?
         .normalize()
-        .symbol_probabilities;
-
-    let entropy = -ps
+        .symbol_probabilities
         .iter()
         .filter(|&&p| p != 0.)
         .map(|&p| p * f64::log(p, 2.0))
-        .sum::<f64>();
-
-    Ok(entropy)
+        .sum::<f64>())
 }
 
 fn compress(f: PathBuf) -> io::Result<f64> {
@@ -54,13 +50,11 @@ struct Args {
 enum Commands {
     /// Compress a file
     Compress {
-        /// Filepath to compress
         #[arg(value_name = "FILE")]
         filepath: PathBuf,
     },
     /// Calculate the entropy of a file
     Entropy {
-        /// Filepath for entropy calculation
         #[arg(value_name = "FILE")]
         filepath: PathBuf,
     },

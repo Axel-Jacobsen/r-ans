@@ -39,16 +39,14 @@ impl SymbolStatistics {
     }
 
     pub fn normalize(&self) -> SymbolProbabilities {
-        let normalized_frequencies: [f64; 256] = self
-            .symbol_counts
-            .into_iter()
-            .map(|x| x as f64 / self.tot_count as f64)
-            .collect::<Vec<f64>>()
-            .try_into()
-            .unwrap();
-
         SymbolProbabilities {
-            symbol_probabilities: normalized_frequencies,
+            symbol_probabilities: self
+                .symbol_counts
+                .into_iter()
+                .map(|x| x as f64 / self.tot_count as f64)
+                .collect::<Vec<f64>>()
+                .try_into()
+                .expect("numbers in, numbers out"),
         }
     }
 }
