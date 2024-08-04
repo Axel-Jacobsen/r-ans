@@ -42,32 +42,37 @@ fn compress(f: PathBuf) -> io::Result<f64> {
 }
 
 // TODO I don't like the ergonomics of this CLI
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// What to do
     #[command(subcommand)]
     command: Commands,
-
-    /// Path to input file
-    filepath: PathBuf,
 }
 
-#[derive(Subcommand, Debug)]
+/// Enum for subcommands
+#[derive(Subcommand)]
 enum Commands {
-    /// Calculate entropy of the input file
-    Entropy,
-
-    /// Compress the input file
-    Compress,
+    /// Compress a file
+    Compress {
+        /// Filepath to compress
+        #[arg(value_name = "FILE")]
+        filepath: PathBuf,
+    },
+    /// Calculate the entropy of a file
+    Entropy {
+        /// Filepath for entropy calculation
+        #[arg(value_name = "FILE")]
+        filepath: PathBuf,
+    },
 }
 
 fn main() -> io::Result<()> {
     let args = Args::parse();
 
     let output = match args.command {
-        Commands::Entropy => entropy_of_file(args.filepath)?,
-        Commands::Compress => compress(args.filepath)?,
+        Commands::Entropy { filepath } => entropy_of_file(filepath)?,
+        Commands::Compress { filepath } => compress(filepath)?,
     };
 
     println!("{output}");
