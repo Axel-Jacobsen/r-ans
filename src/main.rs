@@ -41,7 +41,6 @@ fn compress(f: PathBuf) -> io::Result<f64> {
     Ok(0f64)
 }
 
-// TODO I don't like the ergonomics of this CLI
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
